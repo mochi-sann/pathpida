@@ -3,7 +3,7 @@ import type { NextConfig } from 'next/dist/server/config'
 import path from 'path'
 
 export type Config = {
-  type: 'nextjs' | 'nuxtjs' | 'sapper'
+  type: 'nextjs' | 'nuxtjs' | 'sapper' | 'svelte-kit'
   input: string
   staticDir: string | undefined
   output: string
@@ -16,8 +16,13 @@ export type Config = {
 const getFrameworkType = (dir: string) => {
   const packageJson = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'))
   const deps = Object.assign(packageJson.devDependencies ?? {}, packageJson.dependencies ?? {})
-
-  return deps.sapper ? 'sapper' : deps.nuxt ? 'nuxtjs' : 'nextjs'
+  return deps.sapper
+    ? 'sapper'
+    : deps.nuxt
+    ? 'nuxtjs'
+    : deps['@sveltejs/kit']
+    ? 'svelte-kit'
+    : 'nextjs'
 }
 
 export default async (
@@ -84,6 +89,21 @@ export default async (
       ignorePath,
       trailingSlash: config.router?.trailingSlash,
       basepath: config.router?.base
+    }
+  } else if (type === 'svelte-kit') {
+    // svelte-kit
+    const srcDir = path.posix.join(dir, 'src')
+
+    output = output ?? path.join(srcDir, 'node_modules')
+
+    if (!fs.existsSync(output)) fs.mkdirSync(output)
+
+    return {
+      type,
+      input: path.posix.join(srcDir, 'routes'),
+      staticDir: enableStatic ? path.posix.join(dir, 'static') : undefined,
+      output,
+      ignorePath
     }
   } else {
     const srcDir = path.posix.join(dir, 'src')

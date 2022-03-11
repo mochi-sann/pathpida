@@ -23,7 +23,8 @@ export default (
     let text = {
       nextjs: () => createNextTemplate(input, output, ignorePath, pageExtensions),
       nuxtjs: () => createNuxtTemplate(input, output, ignorePath, trailingSlash),
-      sapper: () => createSapperTemplate(input, output, ignorePath)
+      sapper: () => createSapperTemplate(input, output, ignorePath),
+      'svelte-kit': () => createSapperTemplate(input, output, ignorePath, trailingSlash)
     }[type]()
 
     while (emptyPathRegExp.test(text)) {
